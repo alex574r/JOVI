@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.example.jovi.ui.components.*
 import com.example.jovi.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddWorkExperienceScreen(
     onBack: () -> Unit,

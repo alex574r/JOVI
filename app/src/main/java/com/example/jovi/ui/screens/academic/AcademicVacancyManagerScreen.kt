@@ -155,13 +155,6 @@ fun AcademicVacancyManagerScreen(
                     contentColor = SecondaryColor,
                     edgePadding = 20.dp,
                     divider = {},
-                    indicator = { tabPositions ->
-                        TabRowDefaults.SecondaryIndicator(
-                            modifier = Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = PrimaryColor,
-                            height = 3.dp
-                        )
-                    }
                 ) {
                     tabs.forEachIndexed { index, tab ->
                         Tab(

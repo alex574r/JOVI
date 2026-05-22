@@ -348,6 +348,7 @@ fun SectionHeader(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JoviTopBar(
     title: String,
