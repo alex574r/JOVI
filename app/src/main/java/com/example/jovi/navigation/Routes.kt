@@ -1,9 +1,13 @@
 package com.example.jovi.navigation
 
 sealed class Screen(val route: String) {
+    object Splash : Screen("splash")
+    object Onboarding : Screen("onboarding")
+
     object Login : Screen("login")
     object RegisterPersonal : Screen("register_personal")
     object RegisterProfessional : Screen("register_professional")
+    object ForgotPassword : Screen("forgot_password")
     object BiometricVerification : Screen("biometric_verification")
     object ProfileVerifiedSuccess : Screen("profile_verified_success")
 
@@ -29,6 +33,11 @@ sealed class Screen(val route: String) {
     object PublicProfile : Screen("public_profile")
     object StudentProfileDetail : Screen("student_profile_detail")
     object AddWorkExperience : Screen("add_work_experience")
+    object EditProfile : Screen("edit_profile")
+
+    object Notifications : Screen("notifications")
+    object Search : Screen("search")
+    object Settings : Screen("settings")
 
     object DailyStreak : Screen("daily_streak")
     object Leaderboard : Screen("leaderboard")

@@ -1,0 +1,18 @@
+package com.example.jovi.data.db.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+enum class MessageType { TEXT, FILE, INTERVIEW_CARD, SYSTEM }
+
+@Entity(tableName = "messages")
+data class MessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val conversationId: Long,
+    val senderId: Long,
+    val senderName: String,
+    val content: String,
+    val type: MessageType = MessageType.TEXT,
+    val isRead: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis(),
+)

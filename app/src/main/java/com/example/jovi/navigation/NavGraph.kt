@@ -1,15 +1,16 @@
 package com.example.jovi.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
@@ -23,7 +24,12 @@ import com.example.jovi.ui.screens.feed.*
 import com.example.jovi.ui.screens.feedback.*
 import com.example.jovi.ui.screens.gamification.*
 import com.example.jovi.ui.screens.match.MatchCelebrationScreen
+import com.example.jovi.ui.screens.notifications.NotificationsScreen
+import com.example.jovi.ui.screens.onboarding.OnboardingScreen
 import com.example.jovi.ui.screens.profile.*
+import com.example.jovi.ui.screens.search.SearchScreen
+import com.example.jovi.ui.screens.settings.SettingsScreen
+import com.example.jovi.ui.screens.splash.SplashScreen
 import com.example.jovi.ui.screens.tracking.ApplicationTrackerScreen
 import com.example.jovi.ui.screens.verification.*
 import com.example.jovi.ui.screens.video.VideoInterviewScreen
@@ -42,6 +48,7 @@ private val mainScreenRoutes = setOf(
     Screen.PublicProfile.route,
 )
 
+
 @Composable
 fun JoviNavGraph(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -52,6 +59,7 @@ fun JoviNavGraph(navController: NavHostController) {
 
     Scaffold(
         containerColor = BackgroundColor,
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(containerColor = BackgroundColor, tonalElevation = 4.dp) {
@@ -97,9 +105,43 @@ fun JoviNavGraph(navController: NavHostController) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Login.route,
-            modifier = Modifier.padding(innerPadding)
+            startDestination = Screen.Splash.route,
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
+            exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
+            popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(280)) },
+            popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(280)) },
         ) {
+            // --- SPLASH ---
+            composable(
+                Screen.Splash.route,
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
+            ) {
+                SplashScreen(
+                    onFinished = {
+                        navController.navigate(Screen.Onboarding.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // --- ONBOARDING ---
+            composable(
+                Screen.Onboarding.route,
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
+            ) {
+                OnboardingScreen(
+                    onFinish = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             // --- AUTH ---
             composable(Screen.Login.route) {
                 LoginScreen(
@@ -107,7 +149,11 @@ fun JoviNavGraph(navController: NavHostController) {
                     onRegister = { navController.navigate(Screen.RegisterPersonal.route) },
                     onGuest = { navController.navigate(Screen.JobDiscovery.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
                     onRecruiterLogin = { navController.navigate(Screen.AcademicVacancyManager.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    onForgotPassword = { navController.navigate(Screen.ForgotPassword.route) },
                 )
+            }
+            composable(Screen.ForgotPassword.route) {
+                ForgotPasswordScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.RegisterPersonal.route) {
                 RegistrationPersonalInfoScreen(
@@ -136,14 +182,10 @@ fun JoviNavGraph(navController: NavHostController) {
 
             // --- DISCOVERY ---
             composable(Screen.JobDiscovery.route) {
-                JobDiscoveryScreen(
-                    onMatch = { navController.navigate(Screen.MatchCelebration.route) }
-                )
+                JobDiscoveryScreen(onMatch = { navController.navigate(Screen.MatchCelebration.route) })
             }
             composable(Screen.InternshipDiscovery.route) {
-                InternshipDiscoveryScreen(
-                    onMatch = { navController.navigate(Screen.MatchCelebration.route) }
-                )
+                InternshipDiscoveryScreen(onMatch = { navController.navigate(Screen.MatchCelebration.route) })
             }
             composable(Screen.CandidateDiscovery.route) {
                 CandidateDiscoveryScreen(
@@ -153,7 +195,11 @@ fun JoviNavGraph(navController: NavHostController) {
             }
 
             // --- MATCH ---
-            composable(Screen.MatchCelebration.route) {
+            composable(
+                Screen.MatchCelebration.route,
+                enterTransition = { fadeIn(tween(300)) + scaleIn(tween(350), initialScale = 0.85f) },
+                exitTransition = { fadeOut(tween(300)) },
+            ) {
                 MatchCelebrationScreen(
                     onSendMessage = { navController.navigate(Screen.Chat.createRoute("Innovatech Corp")) },
                     onKeepSearching = { navController.popBackStack() },
@@ -181,10 +227,12 @@ fun JoviNavGraph(navController: NavHostController) {
             }
 
             // --- VIDEO ---
-            composable(Screen.VideoInterview.route) {
-                VideoInterviewScreen(
-                    onEndCall = { navController.popBackStack() }
-                )
+            composable(
+                Screen.VideoInterview.route,
+                enterTransition = { fadeIn(tween(300)) },
+                exitTransition = { fadeOut(tween(300)) },
+            ) {
+                VideoInterviewScreen(onEndCall = { navController.popBackStack() })
             }
 
             // --- PROCESS ---
@@ -229,18 +277,55 @@ fun JoviNavGraph(navController: NavHostController) {
                     onSave = { navController.popBackStack() }
                 )
             }
+            composable(Screen.EditProfile.route) {
+                EditProfileScreen(
+                    onBack = { navController.popBackStack() },
+                    onSave = { navController.popBackStack() }
+                )
+            }
 
             // --- FEED ---
             composable(Screen.ProfessionalFeed.route) {
                 ProfessionalFeedScreen(
                     onCreateContent = { navController.navigate(Screen.CreateReelOrThread.route) },
-                    onApply = { navController.navigate(Screen.ApplicationTracker.route) }
+                    onApply = { navController.navigate(Screen.ApplicationTracker.route) },
+                    onNotifications = { navController.navigate(Screen.Notifications.route) },
+                    onSearch = { navController.navigate(Screen.Search.route) },
                 )
             }
             composable(Screen.CreateReelOrThread.route) {
                 CreateReelOrThreadScreen(
                     onDismiss = { navController.popBackStack() },
                     onPost = { navController.popBackStack() }
+                )
+            }
+
+            // --- NOTIFICATIONS ---
+            composable(Screen.Notifications.route) {
+                NotificationsScreen(onBack = { navController.popBackStack() })
+            }
+
+            // --- SEARCH ---
+            composable(
+                Screen.Search.route,
+                enterTransition = { fadeIn(tween(280)) },
+                exitTransition = { fadeOut(tween(280)) },
+            ) {
+                SearchScreen(
+                    onBack = { navController.popBackStack() },
+                    onProfile = { navController.navigate(Screen.StudentProfileDetail.route) },
+                )
+            }
+
+            // --- SETTINGS ---
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    onBack = { navController.popBackStack() },
+                    onLogout = {
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 )
             }
 
@@ -252,20 +337,18 @@ fun JoviNavGraph(navController: NavHostController) {
                 )
             }
             composable(Screen.Leaderboard.route) {
-                LeaderboardScreen(
-                    onBack = { navController.popBackStack() }
-                )
+                LeaderboardScreen(onBack = { navController.popBackStack() })
             }
 
             // --- ACADEMIC / RECRUITER ---
             composable(Screen.AcademicVacancyManager.route) {
                 AcademicVacancyManagerScreen(
-                    onNotifications = {},
+                    onNotifications = { navController.navigate(Screen.Notifications.route) },
                     onPublishVacancy = { navController.navigate(Screen.PublishVacancy.route) },
                     onReviewApplicants = { navController.navigate(Screen.ServiceApplicants.route) },
                     onMessages = { navController.navigate(Screen.Chat.createRoute("Estudiante")) },
                     onProfile = { navController.navigate(Screen.PublicProfile.route) },
-                    onSettings = {}
+                    onSettings = { navController.navigate(Screen.Settings.route) }
                 )
             }
             composable(Screen.ServiceApplicants.route) {

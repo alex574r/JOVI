@@ -33,7 +33,7 @@ fun StudentProfileDetailScreen(
                 onBack = onBack,
                 actions = {
                     IconButton(onClick = {}) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null, tint = TextPrimary)
+                        Icon(Icons.Outlined.MoreVert, contentDescription = null, tint = TextPrimary)
                     }
                 }
             )

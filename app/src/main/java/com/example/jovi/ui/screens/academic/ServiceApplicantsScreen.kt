@@ -167,7 +167,7 @@ private fun ApplicantCard(applicant: Applicant, onViewProfile: () -> Unit, onCha
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             StatusBadge(applicant.status)
-                            Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Outlined.ArrowDropDown, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
