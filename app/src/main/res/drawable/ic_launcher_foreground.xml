@@ -1,54 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Jovi brand icon — bold "J" monogram, centered in 108x108 safe zone.
+    Safe zone: 18dp margin on all sides → content lives in 72x72 center.
+    Visual bounds of J: x=28..80, y=19..89 → center=(54,54) exactly.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="1003"
-    android:viewportHeight="1003">
+    android:viewportWidth="108"
+    android:viewportHeight="108">
 
-    <!-- White background circle -->
+    <!--
+        J letterform path (clockwise outline):
+        - Crossbar  : (28,19) → (80,19) → (80,33) → (28,33)
+        - Right arm : (66,33) → (80,33) → (80,75)
+        - Outer hook: arc from (80,75) → (34,75) sweeping down to (57,89)
+        - Gap wall  : (34,75) → (34,61) → (46,61) → (46,75)
+        - Inner hook: arc from (46,75) → (66,75) rising to (56,67)
+        - Inner arm : (66,75) → (66,33) → (28,33) → close
+    -->
     <path
-        android:pathData="M0,501.5 a501.5,501.5 0 1 0 1003,0 a501.5,501.5 0 1 0 -1003,0 z"
-        android:fillColor="#FFFFFF" />
+        android:fillColor="#173300"
+        android:pathData="
+            M28,19 H80 V75
+            A23,14 0 0 1 34,75
+            V61 H46 V75
+            A10,8 0 0 0 66,75
+            V33 H28 Z" />
 
-    <!-- Large lime green circle (head/body area) -->
-    <path
-        android:pathData="M263.009,419.031 a240.72,240.72 0 1 0 481.44,0 a240.72,240.72 0 1 0 -481.44,0 z"
-        android:fillColor="#9FE970" />
-
-    <!-- Green rectangle body fill -->
-    <path
-        android:pathData="M263,412 h164.938 v285.298 h-164.938 z"
-        android:fillColor="#9FE970" />
-
-    <!-- Small green circle (lower left detail) -->
-    <path
-        android:pathData="M262.531,693 a82.4689,82.4689 0 1 0 164.9378,0 a82.4689,82.4689 0 1 0 -164.9378,0 z"
-        android:fillColor="#9FE970" />
-
-    <!-- White head circle -->
-    <path
-        android:pathData="M414.5734,410.116 a89.1556,89.1556 0 1 0 178.3112,0 a89.1556,89.1556 0 1 0 -178.3112,0 z"
-        android:fillColor="#FFFFFF" />
-
-    <!-- White body pill (clothing) -->
-    <path
-        android:pathData="M419,599.469 a82.4689,82.4689 0 0 1 164.938,0 L583.938,742.118 a82.4689,82.4689 0 0 1 -164.938,0 Z"
-        android:fillColor="#FFFFFF" />
-
-    <!-- Dark green collar detail -->
-    <path
-        android:pathData="M521.56,519.331 C505.525,541.959 497.113,543.982 483.669,519.331 L483.669,517.102 L490.356,517.102 L508.187,517.102 L521.56,519.331 Z"
-        android:fillColor="#173300" />
-
-    <!-- Dark green torso shape -->
-    <path
-        android:pathData="M476.982,601.8 L501.5,537.162 C509.002,548.668 513.029,566.303 526.018,601.8 L499.271,628.547 Z"
-        android:fillColor="#173300" />
-
-    <!-- Vertical stroke lines (legs/limbs) -->
-    <path
-        android:pathData="M425.718,684.269 L425.718,639.691 M269.696,670.896 L269.696,423.489"
-        android:strokeColor="#173300"
-        android:strokeWidth="4.45778"
-        android:strokeLineCap="round" />
 </vector>
