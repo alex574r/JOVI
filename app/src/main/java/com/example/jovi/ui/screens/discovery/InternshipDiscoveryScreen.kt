@@ -48,6 +48,7 @@ private val sampleInternships = listOf(
 @Composable
 fun InternshipDiscoveryScreen(
     onMatch: () -> Unit,
+    onVacancyDetail: () -> Unit = {},
     currentUserName: String = "Sarah Jenkins",
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
