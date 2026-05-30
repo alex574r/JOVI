@@ -1,19 +1,20 @@
 package com.example.jovi.ui.screens.splash
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.jovi.R
 import com.example.jovi.ui.theme.*
 import kotlinx.coroutines.delay
 
@@ -50,7 +51,7 @@ fun SplashScreen(onFinished: (neverShowAgain: Boolean) -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SecondaryColor),
+            .background(BackgroundColor), // fondo blanco/claro
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -60,30 +61,23 @@ fun SplashScreen(onFinished: (neverShowAgain: Boolean) -> Unit) {
                 .alpha(alpha)
                 .scale(scale)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    "J",
-                    color = SecondaryColor,
-                    fontSize = 52.sp,
-                    fontWeight = FontWeight.ExtraBold
-                )
-            }
+            // Logo — reemplaza splash_logo.xml con tu imagen (PNG/WebP del mismo nombre)
+            Image(
+                painter = painterResource(id = R.drawable.splash_logo),
+                contentDescription = "Jovi Logo",
+                modifier = Modifier.size(120.dp)
+            )
+
             Text(
                 "jovi",
-                color = PrimaryColor,
+                color = SecondaryColor, // verde oscuro sobre fondo blanco
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 4.sp
             )
             Text(
                 "Tu carrera, tu camino",
-                color = PrimaryColor.copy(alpha = 0.6f),
+                color = TextSecondary,
                 style = MaterialTheme.typography.bodySmall,
                 letterSpacing = 1.sp
             )
@@ -106,15 +100,15 @@ fun SplashScreen(onFinished: (neverShowAgain: Boolean) -> Unit) {
                     checked = neverShowAgain,
                     onCheckedChange = { neverShowAgain = it },
                     colors = CheckboxDefaults.colors(
-                        checkedColor = PrimaryColor,
-                        uncheckedColor = PrimaryColor.copy(alpha = 0.5f),
-                        checkmarkColor = SecondaryColor
+                        checkedColor = PrimaryDark,
+                        uncheckedColor = TextSecondary,
+                        checkmarkColor = BackgroundColor
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     "No mostrar de nuevo",
-                    color = PrimaryColor.copy(alpha = 0.8f),
+                    color = TextPrimary,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
