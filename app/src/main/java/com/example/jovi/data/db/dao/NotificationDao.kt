@@ -1,6 +1,7 @@
 package com.example.jovi.data.db.dao
 
 import androidx.room.*
+import androidx.room3.OnConflictStrategy
 import com.example.jovi.data.db.entity.NotificationEntity
 import kotlinx.coroutines.flow.Flow
 

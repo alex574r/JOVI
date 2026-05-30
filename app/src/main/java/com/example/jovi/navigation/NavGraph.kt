@@ -1,5 +1,6 @@
 package com.example.jovi.navigation
 
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
@@ -58,6 +59,9 @@ private val mainScreenRoutes = setOf(
 @Composable
 fun JoviNavGraph(navController: NavHostController) {
     val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("jovi_prefs", Context.MODE_PRIVATE) }
+    val skipSplash = remember { prefs.getBoolean("splash_skip", false) }
+    val startDestination = if (skipSplash) Screen.Onboarding.route else Screen.Splash.route
     val app = context.applicationContext as JoviApplication
 
     // --- ViewModels ---
@@ -133,7 +137,7 @@ fun JoviNavGraph(navController: NavHostController) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Splash.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
@@ -147,11 +151,16 @@ fun JoviNavGraph(navController: NavHostController) {
                 enterTransition = { fadeIn(tween(300)) },
                 exitTransition = { fadeOut(tween(300)) },
             ) {
-                SplashScreen(onFinished = {
-                    navController.navigate(Screen.Onboarding.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
+                SplashScreen(
+                    onFinished = { neverShowAgain ->
+                        if (neverShowAgain) {
+                            prefs.edit().putBoolean("splash_skip", true).apply()
+                        }
+                        navController.navigate(Screen.Onboarding.route) {
+                            popUpTo(Screen.Splash.route) { inclusive = true }
+                        }
                     }
-                })
+                )
             }
 
             // --- ONBOARDING ---
