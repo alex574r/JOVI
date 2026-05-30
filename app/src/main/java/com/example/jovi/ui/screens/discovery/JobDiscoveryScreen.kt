@@ -2,8 +2,10 @@ package com.example.jovi.ui.screens.discovery
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.Info
@@ -133,57 +135,64 @@ fun JobDiscoveryScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                            .padding(horizontal = 20.dp)
+                            .padding(top = 20.dp, bottom = 16.dp),
                     ) {
-                        Box(
+                        // Contenido scrollable
+                        Column(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(PrimaryLight),
-                            contentAlignment = Alignment.Center
+                                .weight(1f)
+                                .verticalScroll(rememberScrollState()),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            ProfileAvatar(job.company.take(2), size = 56.dp)
-                        }
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Column {
-                                Text(job.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                                Text(job.company, style = MaterialTheme.typography.bodyLarge, color = PrimaryDark)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(100.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(PrimaryLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ProfileAvatar(job.company.take(2), size = 52.dp)
                             }
-                            IconButton(onClick = onVacancyDetail, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Outlined.Info, contentDescription = "Ver detalle", tint = TextSecondary)
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(job.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                                    Text(job.company, style = MaterialTheme.typography.bodyLarge, color = PrimaryDark)
+                                }
+                                IconButton(onClick = onVacancyDetail, modifier = Modifier.size(24.dp)) {
+                                    Icon(Icons.Outlined.Info, contentDescription = "Ver detalle", tint = TextSecondary)
+                                }
                             }
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                                Text("${job.location} • ${job.modality}", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                            }
+
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                InfoChip(text = job.salaryRange)
+                                InfoChip(text = job.level)
+                                job.tags.forEach { InfoChip(text = it) }
+                            }
+
+                            Text(
+                                job.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TextSecondary,
+                            )
                         }
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Icon(Icons.Outlined.LocationOn, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(14.dp))
-                            Text("${job.location} • ${job.modality}", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                        }
-
-                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            InfoChip(text = job.salaryRange)
-                            InfoChip(text = job.level)
-                            job.tags.forEach { InfoChip(text = it) }
-                        }
-
-                        Text(
-                            job.description,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = TextSecondary,
-                            maxLines = 4
-                        )
-
-                        Spacer(Modifier.weight(1f))
-
+                        // Botones siempre visibles en la parte inferior
+                        Spacer(Modifier.height(8.dp))
                         SwipeActionButtons(
                             onDislike = { currentIndex++ },
                             onUndo = { if (currentIndex > 0) currentIndex-- },

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PLACEHOLDER: reemplaza este archivo con tu imagen (splash_logo.png o splash_logo.webp) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Fondo circular -->
+    <path
+        android:fillColor="#9FE970"
+        android:pathData="M60,0 A60,60 0 1,1 60,120 A60,60 0 1,1 60,0 Z" />
+
+    <!-- Letra J centrada (placeholder) -->
+    <path
+        android:fillColor="#173300"
+        android:pathData="M52,28 L68,28 L68,78 Q68,96 48,96 Q38,96 33,88 L43,80 Q46,86 50,86 Q56,86 56,78 L56,40 L52,40 Z" />
+</vector>
