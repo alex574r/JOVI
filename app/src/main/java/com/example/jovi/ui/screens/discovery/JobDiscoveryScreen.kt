@@ -74,7 +74,7 @@ fun JobDiscoveryScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 ProfileAvatar(initials = currentUserName.take(2), size = 44.dp)
