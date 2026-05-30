@@ -74,23 +74,36 @@ fun JobDiscoveryScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                ProfileAvatar(initials = currentUserName.take(2), size = 44.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                ProfileAvatar(initials = currentUserName.take(2), size = 48.dp)
                 Column {
-                    Text("Bienvenido de vuelta,", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-                    Text(currentUserName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        "Bienvenido de vuelta,",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary
+                    )
+                    Text(
+                        currentUserName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
                 }
             }
             Surface(
                 onClick = {},
                 shape = RoundedCornerShape(12.dp),
-                color = SurfaceColor
+                color = PrimaryLight
             ) {
                 Icon(
                     Icons.Default.Tune,
                     contentDescription = "Filtros",
                     modifier = Modifier.padding(10.dp),
-                    tint = SecondaryColor
+                    tint = PrimaryDark
                 )
             }
         }

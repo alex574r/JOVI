@@ -38,7 +38,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SecondaryColor)
+            .background(BackgroundColor)
     ) {
         TextButton(
             onClick = onFinish,
@@ -46,7 +46,7 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 .align(Alignment.TopEnd)
                 .padding(16.dp)
         ) {
-            Text("Saltar", color = PrimaryColor.copy(0.7f))
+            Text("Saltar", color = PrimaryDark)
         }
 
         Column(
@@ -75,13 +75,13 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                         modifier = Modifier
                             .size(140.dp)
                             .clip(CircleShape)
-                            .background(PrimaryColor.copy(0.15f)),
+                            .background(PrimaryLight),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(data.icon, contentDescription = null, tint = PrimaryColor, modifier = Modifier.size(64.dp))
+                        Icon(data.icon, contentDescription = null, tint = PrimaryDark, modifier = Modifier.size(64.dp))
                     }
-                    Text(data.title, color = BackgroundColor, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
-                    Text(data.subtitle, color = BackgroundColor.copy(0.6f), style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, lineHeight = MaterialTheme.typography.bodyMedium.lineHeight)
+                    Text(data.title, color = TextPrimary, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+                    Text(data.subtitle, color = TextSecondary, style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, lineHeight = MaterialTheme.typography.bodyMedium.lineHeight)
                 }
             }
         }
@@ -110,12 +110,12 @@ fun OnboardingScreen(onFinish: () -> Unit) {
                 },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(50),
-                color = PrimaryColor
+                color = SecondaryColor
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
                         if (currentPage < pages.size - 1) "Siguiente" else "Comenzar",
-                        color = SecondaryColor,
+                        color = PrimaryColor,
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.labelLarge
                     )
