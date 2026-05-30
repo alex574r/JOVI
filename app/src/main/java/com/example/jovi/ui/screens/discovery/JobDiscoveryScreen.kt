@@ -51,6 +51,7 @@ private val sampleJobs = listOf(
 @Composable
 fun JobDiscoveryScreen(
     onMatch: () -> Unit,
+    onVacancyDetail: () -> Unit = {},
     currentUserName: String = "Sarah Jenkins",
 ) {
     var currentIndex by remember { mutableIntStateOf(0) }
@@ -155,7 +156,9 @@ fun JobDiscoveryScreen(
                                 Text(job.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                                 Text(job.company, style = MaterialTheme.typography.bodyLarge, color = PrimaryDark)
                             }
-                            Icon(Icons.Outlined.Info, contentDescription = null, tint = TextSecondary)
+                            IconButton(onClick = onVacancyDetail, modifier = Modifier.size(24.dp)) {
+                                Icon(Icons.Outlined.Info, contentDescription = "Ver detalle", tint = TextSecondary)
+                            }
                         }
 
                         Row(
