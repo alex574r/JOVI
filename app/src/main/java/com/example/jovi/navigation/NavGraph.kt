@@ -1,5 +1,6 @@
 package com.example.jovi.navigation
 
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.WindowInsets
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -51,6 +53,11 @@ private val mainScreenRoutes = setOf(
 
 @Composable
 fun JoviNavGraph(navController: NavHostController) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("jovi_prefs", Context.MODE_PRIVATE) }
+    val skipSplash = remember { prefs.getBoolean("splash_skip", false) }
+    val startDestination = if (skipSplash) Screen.Onboarding.route else Screen.Splash.route
+
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -105,7 +112,7 @@ fun JoviNavGraph(navController: NavHostController) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Splash.route,
+            startDestination = startDestination,
             modifier = Modifier.padding(innerPadding),
             enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
             exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(280)) },
@@ -119,7 +126,10 @@ fun JoviNavGraph(navController: NavHostController) {
                 exitTransition = { fadeOut(tween(300)) },
             ) {
                 SplashScreen(
-                    onFinished = {
+                    onFinished = { neverShowAgain ->
+                        if (neverShowAgain) {
+                            prefs.edit().putBoolean("splash_skip", true).apply()
+                        }
                         navController.navigate(Screen.Onboarding.route) {
                             popUpTo(Screen.Splash.route) { inclusive = true }
                         }
