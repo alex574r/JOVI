@@ -31,7 +31,7 @@ class ProfileViewModel(
             userRepository.getUserById(userId).collect { _user.value = it }
         }
         viewModelScope.launch {
-            postRepository.getPostsByUser(userId).collect { _posts.value = it }
+            postRepository.getPostsByAuthor(userId).collect { _posts.value = it }
         }
     }
 

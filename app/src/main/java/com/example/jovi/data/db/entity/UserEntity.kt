@@ -11,6 +11,7 @@ data class UserEntity(
     val username: String,
     val displayName: String,
     val email: String,
+    val password: String = "",
     val avatarInitials: String,
     val bio: String = "",
     val accountType: AccountType = AccountType.STUDENT,
@@ -21,5 +22,6 @@ data class UserEntity(
     val university: String = "",
     val company: String = "",
     val location: String = "",
+    val headline: String = "",
     val createdAt: Long = System.currentTimeMillis(),
 )

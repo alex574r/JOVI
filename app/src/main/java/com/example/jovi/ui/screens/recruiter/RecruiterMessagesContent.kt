@@ -29,7 +29,7 @@ private data class RecruiterConversation(
 )
 
 @Composable
-fun RecruiterMessagesContent(onOpenChat: (String) -> Unit) {
+fun RecruiterMessagesContent(onOpenChat: (Long) -> Unit) {
     val conversations = listOf(
         RecruiterConversation(1, "Carlos Mendoza", "CM", "Perfecto, nos vemos el martes a las 10am", "15m", false, "Entrevista"),
         RecruiterConversation(2, "Ana Garcia", "AG", "Muchas gracias por la oportunidad!", "1h", true, "Seleccionada"),
@@ -57,7 +57,7 @@ fun RecruiterMessagesContent(onOpenChat: (String) -> Unit) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
             items(conversations.size) { index ->
                 val conv = conversations[index]
-                RecruiterConversationRow(conv = conv, onClick = { onOpenChat(conv.candidateName) })
+                RecruiterConversationRow(conv = conv, onClick = { onOpenChat(conv.id.toLong()) })
                 HorizontalDivider(color = DividerColor, modifier = Modifier.padding(start = 76.dp))
             }
         }

@@ -27,4 +27,7 @@ interface NotificationDao {
 
     @Query("SELECT COUNT(*) FROM notifications")
     suspend fun count(): Int
+
+    @Query("SELECT * FROM notifications WHERE userId = :userId ORDER BY timestamp DESC")
+    fun getNotificationsForUser(userId: Long): Flow<List<NotificationEntity>>
 }

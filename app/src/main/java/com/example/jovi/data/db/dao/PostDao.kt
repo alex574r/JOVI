@@ -18,6 +18,9 @@ interface PostDao {
     @Query("SELECT * FROM posts WHERE authorId = :userId ORDER BY timestamp DESC")
     fun getPostsByUser(userId: Long): Flow<List<PostEntity>>
 
+    @Query("SELECT * FROM posts WHERE authorId = :authorId ORDER BY timestamp DESC")
+    fun getPostsByAuthor(authorId: Long): Flow<List<PostEntity>>
+
     @Query("SELECT * FROM posts WHERE id = :id")
     fun getPostById(id: Long): Flow<PostEntity?>
 

@@ -13,6 +13,15 @@ interface MessageDao {
     @Query("SELECT * FROM conversations ORDER BY lastMessageAt DESC")
     fun getAllConversations(): Flow<List<ConversationEntity>>
 
+    @Query("SELECT * FROM conversations WHERE userId1 = :userId OR userId2 = :userId ORDER BY lastMessageAt DESC")
+    fun getConversationsForUser(userId: Long): Flow<List<ConversationEntity>>
+
+    @Query("UPDATE conversations SET lastMessage = :msg, lastMessageAt = :ts WHERE id = :convId")
+    suspend fun updateLastMessage(convId: Long, msg: String, ts: Long)
+
+    @Query("UPDATE conversations SET unreadCount = 0 WHERE id = :convId")
+    suspend fun resetUnreadCount(convId: Long)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: MessageEntity): Long
 

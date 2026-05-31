@@ -10,6 +10,7 @@ data class UserSettingsEntity(
     val matchNotifications: Boolean = true,
     val messageNotifications: Boolean = true,
     val darkMode: Boolean = false,
+    val biometricEnabled: Boolean = false,
     val language: String = "es",
     val profileVisibility: String = "public",
 )

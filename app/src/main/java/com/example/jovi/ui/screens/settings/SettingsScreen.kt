@@ -15,19 +15,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.jovi.ui.components.*
 import com.example.jovi.ui.theme.*
+import com.example.jovi.viewmodel.AuthViewModel
+import com.example.jovi.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
+    authViewModel: AuthViewModel,
+    settingsViewModel: SettingsViewModel,
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onChangePassword: () -> Unit = {},
     onNotificationPrefs: () -> Unit = {},
     onPrivacy: () -> Unit = {},
     onHelp: () -> Unit = {},
+    onEditProfile: () -> Unit = {},
 ) {
-    var notificationsEnabled by remember { mutableStateOf(true) }
-    var profilePublic by remember { mutableStateOf(true) }
-    var darkMode by remember { mutableStateOf(false) }
+    val settings by settingsViewModel.settings.collectAsState()
 
     Scaffold(
         topBar = { JoviTopBar(title = "Ajustes", onBack = onBack) },
@@ -40,34 +43,50 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             SectionLabel("Perfil y cuenta")
+            SettingsArrowRow(icon = Icons.Outlined.Person, title = "Editar perfil", subtitle = "Nombre, bio, universidad", onClick = onEditProfile)
             SettingsArrowRow(icon = Icons.Outlined.Lock, title = "Cambiar contraseña", subtitle = "Actualiza tu contraseña de acceso", onClick = onChangePassword)
-            SettingsArrowRow(icon = Icons.Outlined.Verified, title = "Verificacion biometrica", subtitle = "Facial o huella dactilar", onClick = {})
+            SettingsToggleRow(
+                icon = Icons.Outlined.Fingerprint,
+                title = "Autenticación biométrica",
+                subtitle = "Huella dactilar o Face ID",
+                checked = settings?.biometricEnabled ?: false,
+                onCheckedChange = { settingsViewModel.toggleBiometric() }
+            )
 
             SectionLabel("Preferencias")
-            SettingsToggleRow(icon = Icons.Outlined.Notifications, title = "Notificaciones push", subtitle = "Recibir alertas en tiempo real", checked = notificationsEnabled, onCheckedChange = { notificationsEnabled = it })
-            SettingsArrowRow(icon = Icons.Outlined.NotificationsNone, title = "Preferencias de notificacion", subtitle = "Que tipo de alertas recibir", onClick = onNotificationPrefs)
-            SettingsToggleRow(icon = Icons.Outlined.DarkMode, title = "Modo oscuro", subtitle = "Proximamente disponible", checked = darkMode, onCheckedChange = { darkMode = it })
+            SettingsToggleRow(
+                icon = Icons.Outlined.Notifications,
+                title = "Notificaciones push",
+                subtitle = "Recibir alertas en tiempo real",
+                checked = settings?.notificationsEnabled ?: true,
+                onCheckedChange = { settingsViewModel.toggleNotifications() }
+            )
+            SettingsArrowRow(icon = Icons.Outlined.NotificationsNone, title = "Preferencias de notificación", subtitle = "Que tipo de alertas recibir", onClick = onNotificationPrefs)
+            SettingsToggleRow(
+                icon = Icons.Outlined.DarkMode,
+                title = "Modo oscuro",
+                subtitle = "Cambia el tema de la app",
+                checked = settings?.darkMode ?: false,
+                onCheckedChange = { settingsViewModel.toggleDarkMode() }
+            )
 
             SectionLabel("Privacidad y seguridad")
-            SettingsToggleRow(icon = Icons.Outlined.VisibilityOff, title = "Perfil publico", subtitle = "Visible para todos los usuarios", checked = profilePublic, onCheckedChange = { profilePublic = it })
-            SettingsArrowRow(icon = Icons.Outlined.Security, title = "Privacidad", subtitle = "Controla quien ve tu informacion", onClick = onPrivacy)
-            SettingsArrowRow(icon = Icons.Outlined.Download, title = "Descargar mis datos", subtitle = "Exportar informacion de mi cuenta", onClick = {})
+            SettingsArrowRow(icon = Icons.Outlined.Security, title = "Privacidad", subtitle = "Controla quien ve tu información", onClick = onPrivacy)
 
             SectionLabel("Soporte")
             SettingsArrowRow(icon = Icons.Outlined.HelpOutline, title = "Centro de ayuda", subtitle = "Preguntas frecuentes y soporte", onClick = onHelp)
-            SettingsArrowRow(icon = Icons.Outlined.Info, title = "Acerca de Jovi", subtitle = "Version 1.0.1 (build 3)", onClick = {})
-            SettingsArrowRow(icon = Icons.Outlined.Description, title = "Terminos y condiciones", subtitle = "Politica de uso", onClick = {})
+            SettingsArrowRow(icon = Icons.Outlined.Info, title = "Acerca de Jovi", subtitle = "Versión 1.0.2", onClick = {})
 
             Spacer(Modifier.height(24.dp))
             Surface(
-                onClick = onLogout,
+                onClick = { authViewModel.logout(); onLogout() },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(14.dp),
                 color = StatusRejected.copy(0.08f),
             ) {
                 Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Outlined.Logout, contentDescription = null, tint = StatusRejected)
-                    Text("Cerrar sesion", style = MaterialTheme.typography.bodyMedium, color = StatusRejected, fontWeight = FontWeight.SemiBold)
+                    Text("Cerrar sesión", style = MaterialTheme.typography.bodyMedium, color = StatusRejected, fontWeight = FontWeight.SemiBold)
                 }
             }
             Spacer(Modifier.height(32.dp))
@@ -77,22 +96,12 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionLabel(title: String) {
-    Text(
-        title.uppercase(),
-        style = MaterialTheme.typography.labelSmall,
-        color = TextSecondary,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-    )
+    Text(title.uppercase(), style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
 }
 
 @Composable
 private fun SettingsToggleRow(icon: ImageVector, title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = PrimaryDark, modifier = Modifier.size(22.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
@@ -106,11 +115,7 @@ private fun SettingsToggleRow(icon: ImageVector, title: String, subtitle: String
 @Composable
 private fun SettingsArrowRow(icon: ImageVector, title: String, subtitle: String, onClick: () -> Unit) {
     Surface(onClick = onClick, color = BackgroundColor) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = PrimaryDark, modifier = Modifier.size(22.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)

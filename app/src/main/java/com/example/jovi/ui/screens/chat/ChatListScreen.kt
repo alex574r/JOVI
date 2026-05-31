@@ -29,7 +29,7 @@ import java.util.*
 fun ChatListScreen(
     conversations: List<ConversationEntity>,
     currentUserId: Long = 1L,
-    onOpenChat: (String) -> Unit,
+    onOpenChat: (Long) -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -61,7 +61,7 @@ fun ChatListScreen(
                         otherName = otherName,
                         otherInitials = otherInitials,
                         isUnread = conv.unreadCount > 0,
-                        onClick = { onOpenChat(otherName) }
+                        onClick = { onOpenChat(conv.id) }
                     )
                     HorizontalDivider(color = DividerColor, modifier = Modifier.padding(start = 74.dp))
                 }

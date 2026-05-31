@@ -20,7 +20,7 @@ fun RecruiterPortalScreen(
     viewModel: RecruiterViewModel,
     onLogout: () -> Unit,
     onSettings: () -> Unit,
-    onOpenChat: (String) -> Unit,
+    onOpenChat: (Long) -> Unit,
     onAnalytics: () -> Unit,
     onPublishVacancy: () -> Unit,
     onViewApplicant: () -> Unit,
@@ -80,7 +80,7 @@ fun RecruiterPortalScreen(
                         onAnalytics = onAnalytics,
                         onPublishVacancy = onPublishVacancy,
                         onViewApplicants = { selectedTab = 1 },
-                        onOpenChat = { selectedTab = 2 },
+                        onOpenChat = { _ -> selectedTab = 2 },
                     )
                     1 -> RecruiterCandidatesContent(
                         viewModel = viewModel,

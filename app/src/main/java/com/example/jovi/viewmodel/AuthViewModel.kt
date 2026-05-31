@@ -1,5 +1,6 @@
 package com.example.jovi.viewmodel
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -18,50 +19,95 @@ sealed class AuthState {
     data class Error(val message: String) : AuthState()
 }
 
-class AuthViewModel(private val userRepository: UserRepository) : ViewModel() {
+class AuthViewModel(
+    private val userRepository: UserRepository,
+    private val prefs: SharedPreferences,
+) : ViewModel() {
+
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
 
     private val _currentUser = MutableStateFlow<UserEntity?>(null)
     val currentUser: StateFlow<UserEntity?> = _currentUser.asStateFlow()
 
-    fun login(email: String, password: String) {
+    init {
+        restoreSession()
+    }
+
+    private fun restoreSession() {
+        val savedEmail = prefs.getString("current_user_email", null) ?: return
         viewModelScope.launch {
-            _authState.value = AuthState.Loading
-            val user = userRepository.getUserByEmail(email)
+            val user = userRepository.getUserByEmail(savedEmail)
             if (user != null) {
                 _currentUser.value = user
                 _authState.value = AuthState.Success(user)
+            }
+        }
+    }
+
+    fun login(email: String, password: String) {
+        if (email.isBlank()) { _authState.value = AuthState.Error("Ingresa tu correo"); return }
+        if (password.isBlank()) { _authState.value = AuthState.Error("Ingresa tu contraseña"); return }
+        viewModelScope.launch {
+            _authState.value = AuthState.Loading
+            val user = userRepository.loginWithPassword(email.trim(), password)
+            if (user != null) {
+                saveSession(user)
+                _currentUser.value = user
+                _authState.value = AuthState.Success(user)
             } else {
-                _authState.value = AuthState.Error("Usuario no encontrado")
+                val exists = userRepository.getUserByEmail(email.trim())
+                _authState.value = AuthState.Error(
+                    if (exists != null) "Contraseña incorrecta" else "Email no encontrado"
+                )
             }
         }
     }
 
     fun loginAsDemo(accountType: AccountType = AccountType.STUDENT) {
-        viewModelScope.launch {
-            val demoEmail = if (accountType == AccountType.RECRUITER) "hr@innovatech.com" else "carlos@example.com"
-            val user = userRepository.getUserByEmail(demoEmail)
-            if (user != null) {
-                _currentUser.value = user
-                _authState.value = AuthState.Success(user)
-            } else {
-                _authState.value = AuthState.Idle
-            }
-        }
+        val email = if (accountType == AccountType.RECRUITER) "hr@innovatech.com" else "carlos@example.com"
+        val pass = if (accountType == AccountType.RECRUITER) "innovatech123" else "carlos123"
+        login(email, pass)
     }
 
     fun logout() {
+        prefs.edit().remove("current_user_id").remove("current_user_email").apply()
         _currentUser.value = null
         _authState.value = AuthState.Idle
     }
 
     fun clearError() { _authState.value = AuthState.Idle }
 
-    class Factory(private val repository: UserRepository) : ViewModelProvider.Factory {
+    fun updatePassword(newPassword: String) {
+        val user = _currentUser.value ?: return
+        viewModelScope.launch {
+            val updated = user.copy(password = newPassword)
+            userRepository.update(updated)
+            _currentUser.value = updated
+        }
+    }
+
+    fun updateProfile(updated: UserEntity) {
+        viewModelScope.launch {
+            userRepository.update(updated)
+            _currentUser.value = updated
+        }
+    }
+
+    private fun saveSession(user: UserEntity) {
+        prefs.edit()
+            .putLong("current_user_id", user.id)
+            .putString("current_user_email", user.email)
+            .apply()
+    }
+
+    class Factory(
+        private val repository: UserRepository,
+        private val prefs: SharedPreferences,
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(repository) as T
+            return AuthViewModel(repository, prefs) as T
         }
     }
 }

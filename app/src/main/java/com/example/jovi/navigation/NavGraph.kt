@@ -57,16 +57,21 @@ private val mainScreenRoutes = setOf(
 )
 
 @Composable
-fun JoviNavGraph(navController: NavHostController) {
+fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsViewModel) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("jovi_prefs", Context.MODE_PRIVATE) }
     val skipSplash = remember { prefs.getBoolean("splash_skip", false) }
-    val startDestination = if (skipSplash) Screen.Onboarding.route else Screen.Splash.route
+    val hasSession = remember { prefs.getLong("current_user_id", -1L) >= 0 }
+    val startDestination = when {
+        hasSession -> Screen.JobDiscovery.route
+        skipSplash -> Screen.Onboarding.route
+        else -> Screen.Splash.route
+    }
     val app = context.applicationContext as JoviApplication
 
     // --- ViewModels ---
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModel.Factory(app.userRepository)
+        factory = AuthViewModel.Factory(app.userRepository, prefs)
     )
     val feedViewModel: FeedViewModel = viewModel(
         factory = FeedViewModel.Factory(app.postRepository)
@@ -86,6 +91,11 @@ fun JoviNavGraph(navController: NavHostController) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+    LaunchedEffect(currentUser?.id) {
+        currentUser?.id?.let { settingsViewModel.loadSettings(it) }
+    }
 
     val showBottomBar = currentRoute in mainScreenRoutes
 
@@ -179,21 +189,20 @@ fun JoviNavGraph(navController: NavHostController) {
             // --- AUTH ---
             composable(Screen.Login.route) {
                 LoginScreen(
-                    onLogin = {
-                        authViewModel.loginAsDemo()
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
                         navController.navigate(Screen.JobDiscovery.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                    onLoginAsRecruiter = {
+                        navController.navigate(Screen.RecruiterPortal.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
                     onRegister = { navController.navigate(Screen.RegisterPersonal.route) },
                     onGuest = {
                         navController.navigate(Screen.JobDiscovery.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    },
-                    onRecruiterLogin = {
-                        authViewModel.loginAsDemo(com.example.jovi.data.db.entity.AccountType.RECRUITER)
-                        navController.navigate(Screen.RecruiterPortal.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
@@ -238,15 +247,19 @@ fun JoviNavGraph(navController: NavHostController) {
 
             // --- DISCOVERY ---
             composable(Screen.JobDiscovery.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
                 JobDiscoveryScreen(
                     onMatch = { navController.navigate(Screen.MatchCelebration.route) },
                     onVacancyDetail = { navController.navigate(Screen.VacancyDetail.route) },
+                    currentUserName = currentUser?.displayName ?: "Tú",
                 )
             }
             composable(Screen.InternshipDiscovery.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
                 InternshipDiscoveryScreen(
                     onMatch = { navController.navigate(Screen.MatchCelebration.route) },
                     onVacancyDetail = { navController.navigate(Screen.VacancyDetail.route) },
+                    currentUserName = currentUser?.displayName ?: "Tú",
                 )
             }
             composable(Screen.CandidateDiscovery.route) {
@@ -269,7 +282,7 @@ fun JoviNavGraph(navController: NavHostController) {
                 exitTransition = { fadeOut(tween(300)) },
             ) {
                 MatchCelebrationScreen(
-                    onSendMessage = { navController.navigate(Screen.Chat.createRoute("Innovatech Corp")) },
+                    onSendMessage = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onKeepSearching = { navController.popBackStack() },
                     onDismiss = { navController.popBackStack() },
                 )
@@ -277,19 +290,34 @@ fun JoviNavGraph(navController: NavHostController) {
 
             // --- CHAT LIST ---
             composable(Screen.ChatList.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { chatViewModel.loadConversationsForUser(it) }
+                }
                 val conversations by chatViewModel.conversations.collectAsState()
                 ChatListScreen(
                     conversations = conversations,
-                    onOpenChat = { name -> navController.navigate(Screen.Chat.createRoute(name)) },
+                    currentUserId = currentUser?.id ?: -1L,
+                    onOpenChat = { convId -> navController.navigate(Screen.Chat.createRoute(convId)) },
                     onBack = { navController.popBackStack() },
                 )
             }
 
             // --- CHAT ---
             composable(Screen.Chat.route) { backStackEntry ->
-                val contactName = backStackEntry.arguments?.getString("contactName") ?: "Empresa"
+                val conversationId = backStackEntry.arguments?.getString("conversationId")?.toLongOrNull() ?: return@composable
+                val conversations by chatViewModel.conversations.collectAsState()
+                val currentUser by authViewModel.currentUser.collectAsState()
+                val conv = conversations.find { it.id == conversationId }
+                val isUser1 = conv?.userId1 == currentUser?.id
+                val contactName = if (isUser1) conv?.user2Name ?: "" else conv?.user1Name ?: ""
+                val contactInitials = if (isUser1) conv?.user2Initials ?: "?" else conv?.user1Initials ?: "?"
                 ChatScreen(
+                    conversationId = conversationId,
                     contactName = contactName,
+                    contactInitials = contactInitials,
+                    chatViewModel = chatViewModel,
+                    authViewModel = authViewModel,
                     onBack = { navController.popBackStack() },
                     onScheduleInterview = { navController.navigate(Screen.MyAppointments.route) },
                     onVideoCall = { navController.navigate(Screen.VideoInterview.route) },
@@ -317,7 +345,7 @@ fun JoviNavGraph(navController: NavHostController) {
             composable(Screen.ApplicationTracker.route) {
                 ApplicationTrackerScreen(
                     onBack = { navController.popBackStack() },
-                    onMessageRecruiter = { navController.navigate(Screen.Chat.createRoute("TechCorp")) },
+                    onMessageRecruiter = { navController.navigate(Screen.Chat.createRoute(1L)) },
                 )
             }
             composable(Screen.MyApplications.route) {
@@ -341,11 +369,16 @@ fun JoviNavGraph(navController: NavHostController) {
 
             // --- PROFILE ---
             composable(Screen.PublicProfile.route) {
-                LaunchedEffect(Unit) { profileViewModel.loadUser(1L) }
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { profileViewModel.loadUser(it) }
+                }
+                val profileUser by profileViewModel.user.collectAsState()
+                val profilePosts by profileViewModel.posts.collectAsState()
                 PublicProfileScreen(
                     onBack = { navController.popBackStack() },
                     onShare = {},
-                    onSendMatchRequest = { navController.navigate(Screen.Chat.createRoute("Recruiter")) },
+                    onSendMatchRequest = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onAddExperience = { navController.navigate(Screen.AddWorkExperience.route) },
                     onEditProfile = { navController.navigate(Screen.EditProfile.route) },
                     onSettings = { navController.navigate(Screen.Settings.route) },
@@ -370,8 +403,9 @@ fun JoviNavGraph(navController: NavHostController) {
             }
             composable(Screen.EditProfile.route) {
                 EditProfileScreen(
+                    authViewModel = authViewModel,
                     onBack = { navController.popBackStack() },
-                    onSave = { navController.popBackStack() },
+                    onSave = { navController.popBackStack() }
                 )
             }
             composable(Screen.SavedPosts.route) {
@@ -413,6 +447,10 @@ fun JoviNavGraph(navController: NavHostController) {
 
             // --- NOTIFICATIONS ---
             composable(Screen.Notifications.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { notifViewModel.loadForUser(it) }
+                }
                 val notifications by notifViewModel.notifications.collectAsState()
                 NotificationsScreen(
                     notifications = notifications,
@@ -437,24 +475,24 @@ fun JoviNavGraph(navController: NavHostController) {
             // --- SETTINGS ---
             composable(Screen.Settings.route) {
                 SettingsScreen(
+                    authViewModel = authViewModel,
+                    settingsViewModel = settingsViewModel,
                     onBack = { navController.popBackStack() },
                     onLogout = {
-                        authViewModel.logout()
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                     },
                     onChangePassword = { navController.navigate(Screen.ChangePassword.route) },
                     onNotificationPrefs = { navController.navigate(Screen.NotificationPrefs.route) },
                     onPrivacy = { navController.navigate(Screen.PrivacySettings.route) },
                     onHelp = { navController.navigate(Screen.Help.route) },
+                    onEditProfile = { navController.navigate(Screen.EditProfile.route) },
                 )
             }
             composable(Screen.ChangePassword.route) {
-                ChangePasswordScreen(onBack = { navController.popBackStack() })
+                ChangePasswordScreen(authViewModel = authViewModel, onBack = { navController.popBackStack() })
             }
             composable(Screen.NotificationPrefs.route) {
-                NotificationPrefsScreen(onBack = { navController.popBackStack() })
+                NotificationPrefsScreen(settingsViewModel = settingsViewModel, onBack = { navController.popBackStack() })
             }
             composable(Screen.PrivacySettings.route) {
                 PrivacySettingsScreen(onBack = { navController.popBackStack() })
@@ -493,7 +531,7 @@ fun JoviNavGraph(navController: NavHostController) {
                         }
                     },
                     onSettings = { navController.navigate(Screen.Settings.route) },
-                    onOpenChat = { name -> navController.navigate(Screen.Chat.createRoute(name)) },
+                    onOpenChat = { convId -> navController.navigate(Screen.Chat.createRoute(convId)) },
                     onAnalytics = { navController.navigate(Screen.RecruiterAnalytics.route) },
                     onPublishVacancy = { navController.navigate(Screen.PublishVacancy.route) },
                     onViewApplicant = { navController.navigate(Screen.StudentProfileDetail.route) },
@@ -509,7 +547,7 @@ fun JoviNavGraph(navController: NavHostController) {
                     onNotifications = { navController.navigate(Screen.Notifications.route) },
                     onPublishVacancy = { navController.navigate(Screen.PublishVacancy.route) },
                     onReviewApplicants = { navController.navigate(Screen.ServiceApplicants.route) },
-                    onMessages = { navController.navigate(Screen.Chat.createRoute("Estudiante")) },
+                    onMessages = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onProfile = { navController.navigate(Screen.PublicProfile.route) },
                     onSettings = { navController.navigate(Screen.Settings.route) },
                 )
@@ -518,7 +556,7 @@ fun JoviNavGraph(navController: NavHostController) {
                 ServiceApplicantsScreen(
                     onBack = { navController.popBackStack() },
                     onViewProfile = { navController.navigate(Screen.StudentProfileDetail.route) },
-                    onChat = { navController.navigate(Screen.Chat.createRoute("Estudiante")) },
+                    onChat = { navController.navigate(Screen.Chat.createRoute(1L)) },
                 )
             }
             composable(Screen.PublishVacancy.route) {
