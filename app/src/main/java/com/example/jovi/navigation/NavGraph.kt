@@ -57,11 +57,16 @@ private val mainScreenRoutes = setOf(
 )
 
 @Composable
-fun JoviNavGraph(navController: NavHostController) {
+fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsViewModel) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("jovi_prefs", Context.MODE_PRIVATE) }
     val skipSplash = remember { prefs.getBoolean("splash_skip", false) }
-    val startDestination = if (skipSplash) Screen.Onboarding.route else Screen.Splash.route
+    val hasSession = remember { prefs.getLong("current_user_id", -1L) >= 0 }
+    val startDestination = when {
+        hasSession -> Screen.JobDiscovery.route
+        skipSplash -> Screen.Onboarding.route
+        else -> Screen.Splash.route
+    }
     val app = context.applicationContext as JoviApplication
 
     // --- ViewModels ---
@@ -86,6 +91,11 @@ fun JoviNavGraph(navController: NavHostController) {
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+
+    val currentUser by authViewModel.currentUser.collectAsState()
+    LaunchedEffect(currentUser?.id) {
+        currentUser?.id?.let { settingsViewModel.loadSettings(it) }
+    }
 
     val showBottomBar = currentRoute in mainScreenRoutes
 

@@ -20,3 +20,11 @@ val StatusPending = Color(0xFFFFC107)
 val StatusInterviewed = Color(0xFF2196F3)
 val StatusAccepted = Color(0xFF4CAF50)
 val StatusRejected = Color(0xFF9E9E9E)
+
+// Dark theme colors
+val DarkBackground = androidx.compose.ui.graphics.Color(0xFF0F1A0A)
+val DarkSurface = androidx.compose.ui.graphics.Color(0xFF1A2E12)
+val DarkSurfaceVariant = androidx.compose.ui.graphics.Color(0xFF243B1A)
+val DarkTextPrimary = androidx.compose.ui.graphics.Color(0xFFE8FAE0)
+val DarkTextSecondary = androidx.compose.ui.graphics.Color(0xFF9FBF8A)
+val DarkDivider = androidx.compose.ui.graphics.Color(0xFF2E4A22)
