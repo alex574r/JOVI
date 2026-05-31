@@ -61,7 +61,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("jovi_prefs", Context.MODE_PRIVATE) }
     val skipSplash = remember { prefs.getBoolean("splash_skip", false) }
-    val hasSession = remember { prefs.getLong("current_user_id", -1L) >= 0 }
+    val hasSession = remember { prefs.getLong("current_user_id", -1L) > 0 }
     val startDestination = when {
         hasSession -> Screen.JobDiscovery.route
         skipSplash -> Screen.Onboarding.route
@@ -374,8 +374,8 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                     currentUser?.id?.let { profileViewModel.loadUser(it) }
                 }
                 val profileUser by profileViewModel.user.collectAsState()
-                val profilePosts by profileViewModel.posts.collectAsState()
                 PublicProfileScreen(
+                    user = profileUser ?: currentUser,
                     onBack = { navController.popBackStack() },
                     onShare = {},
                     onSendMatchRequest = { navController.navigate(Screen.Chat.createRoute(1L)) },

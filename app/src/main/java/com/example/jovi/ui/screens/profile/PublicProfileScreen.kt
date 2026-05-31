@@ -17,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.jovi.data.db.entity.UserEntity
 import com.example.jovi.ui.components.*
 import com.example.jovi.ui.theme.*
 
@@ -25,6 +26,7 @@ private data class Education(val degree: String, val institution: String, val ye
 
 @Composable
 fun PublicProfileScreen(
+    user: UserEntity? = null,
     onBack: () -> Unit,
     onShare: () -> Unit,
     onSendMatchRequest: () -> Unit,
@@ -89,7 +91,7 @@ fun PublicProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    ProfileAvatar(initials = "SJ", size = 72.dp, modifier = Modifier.clip(CircleShape))
+                    ProfileAvatar(initials = user?.avatarInitials ?: "?", size = 72.dp, modifier = Modifier.clip(CircleShape))
                     Surface(
                         onClick = onEditProfile,
                         shape = RoundedCornerShape(50),
@@ -112,15 +114,19 @@ fun PublicProfileScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text("Sarah Jenkins", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-                        VerifiedBadge()
+                        Text(user?.displayName ?: "Usuario", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                        if (user?.isVerified == true) VerifiedBadge()
                     }
-                    Text("Senior Product Designer", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
-                    Text(
-                        "Creando experiencias digitales intuitivas por mas de 8 anos. Apasionada por la tecnologia sostenible y sistemas de diseno centrados en humanos.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
-                    )
+                    if ((user?.headline ?: "").isNotBlank()) {
+                        Text(user?.headline ?: "", style = MaterialTheme.typography.bodyLarge, color = TextSecondary)
+                    }
+                    if ((user?.bio ?: "").isNotBlank()) {
+                        Text(
+                            user?.bio ?: "",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextSecondary,
+                        )
+                    }
 
                     Spacer(Modifier.height(12.dp))
 
@@ -132,20 +138,20 @@ fun PublicProfileScreen(
                         StatCard(
                             icon = Icons.Default.Whatshot,
                             label = "RACHA",
-                            value = "15 Dias",
+                            value = "${user?.streakDays ?: 0} Días",
                             modifier = Modifier.weight(1f),
                             onClick = onStreak,
                         )
                         StatCard(
-                            icon = Icons.Default.Star,
-                            label = "RATING",
-                            value = "4.9",
+                            icon = Icons.Default.People,
+                            label = "SEGUIDORES",
+                            value = "${user?.followerCount ?: 0}",
                             modifier = Modifier.weight(1f),
                         )
                         StatCard(
-                            icon = Icons.Default.Favorite,
-                            label = "MATCH",
-                            value = "128",
+                            icon = Icons.Default.PersonAdd,
+                            label = "SIGUIENDO",
+                            value = "${user?.followingCount ?: 0}",
                             modifier = Modifier.weight(1f),
                         )
                     }
