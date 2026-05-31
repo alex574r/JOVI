@@ -14,6 +14,8 @@ class UserRepository(private val userDao: UserDao, private val settingsDao: Sett
     fun searchUsers(query: String): Flow<List<UserEntity>> = userDao.searchUsers(query)
     fun getSettings(userId: Long): Flow<UserSettingsEntity?> = settingsDao.getSettings(userId)
     suspend fun getUserByEmail(email: String): UserEntity? = userDao.getUserByEmail(email)
+    suspend fun loginWithPassword(email: String, password: String): UserEntity? =
+        userDao.getUserByEmailAndPassword(email, password)
     suspend fun insert(user: UserEntity): Long = userDao.insert(user)
     suspend fun update(user: UserEntity) = userDao.update(user)
     suspend fun upsertSettings(settings: UserSettingsEntity) = settingsDao.upsert(settings)
