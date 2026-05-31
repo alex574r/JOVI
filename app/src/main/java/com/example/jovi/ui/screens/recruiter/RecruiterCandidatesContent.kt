@@ -22,7 +22,7 @@ import com.example.jovi.viewmodel.RecruiterViewModel
 fun RecruiterCandidatesContent(
     viewModel: RecruiterViewModel,
     onViewProfile: () -> Unit,
-    onChat: (String) -> Unit,
+    onChat: (Long) -> Unit,
 ) {
     val candidates by viewModel.candidates.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
@@ -83,7 +83,7 @@ fun RecruiterCandidatesContent(
 
             LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
                 items(listToShow, key = { it.id }) { candidate ->
-                    CandidateListRow(candidate = candidate, onViewProfile = onViewProfile, onChat = { onChat(candidate.displayName) })
+                    CandidateListRow(candidate = candidate, onViewProfile = onViewProfile, onChat = { onChat(1L) })
                     HorizontalDivider(color = DividerColor, modifier = Modifier.padding(start = 76.dp))
                 }
             }

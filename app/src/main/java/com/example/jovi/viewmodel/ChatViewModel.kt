@@ -20,9 +20,9 @@ class ChatViewModel(private val messageRepository: MessageRepository) : ViewMode
     private val _messages = MutableStateFlow<List<MessageEntity>>(emptyList())
     val messages: StateFlow<List<MessageEntity>> = _messages.asStateFlow()
 
-    init {
+    fun loadConversationsForUser(userId: Long) {
         viewModelScope.launch {
-            messageRepository.getAllConversations().collect { _conversations.value = it }
+            messageRepository.getConversationsForUser(userId).collect { _conversations.value = it }
         }
     }
 
@@ -33,6 +33,7 @@ class ChatViewModel(private val messageRepository: MessageRepository) : ViewMode
     }
 
     fun sendMessage(conversationId: Long, senderId: Long, senderName: String, text: String) {
+        if (text.isBlank()) return
         viewModelScope.launch {
             messageRepository.sendMessage(
                 MessageEntity(
@@ -44,6 +45,16 @@ class ChatViewModel(private val messageRepository: MessageRepository) : ViewMode
                 )
             )
         }
+    }
+
+    fun sendDocument(conversationId: Long, senderId: Long, senderName: String, fileName: String, fileSize: String) {
+        viewModelScope.launch {
+            messageRepository.sendDocument(conversationId, senderId, senderName, fileName, fileSize)
+        }
+    }
+
+    fun markAsRead(conversationId: Long) {
+        viewModelScope.launch { messageRepository.markAllRead(conversationId) }
     }
 
     class Factory(private val repository: MessageRepository) : ViewModelProvider.Factory {

@@ -31,8 +31,8 @@ sealed class Screen(val route: String) {
 
     // --- CHAT ---
     object ChatList : Screen("chat_list")
-    object Chat : Screen("chat/{contactName}") {
-        fun createRoute(contactName: String) = "chat/$contactName"
+    object Chat : Screen("chat/{conversationId}") {
+        fun createRoute(conversationId: Long) = "chat/$conversationId"
     }
 
     // --- CALENDAR & VIDEO ---

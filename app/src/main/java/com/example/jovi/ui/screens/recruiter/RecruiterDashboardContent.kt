@@ -29,7 +29,7 @@ fun RecruiterDashboardContent(
     onAnalytics: () -> Unit,
     onPublishVacancy: () -> Unit,
     onViewApplicants: () -> Unit,
-    onOpenChat: (String) -> Unit,
+    onOpenChat: (Long) -> Unit,
 ) {
     val stats by viewModel.stats.collectAsState()
     val candidates by viewModel.candidates.collectAsState()
@@ -134,7 +134,7 @@ fun RecruiterDashboardContent(
                         initials = candidate.avatarInitials,
                         name = candidate.displayName,
                         role = candidate.university.ifEmpty { "Desarrollador" },
-                        onMessage = { onOpenChat(candidate.displayName) },
+                        onMessage = { onOpenChat(1L) },
                     )
                 }
                 if (candidates.isEmpty()) {
@@ -144,7 +144,7 @@ fun RecruiterDashboardContent(
                         Triple("AG", "Ana Garcia", "Tec de Monterrey"),
                         Triple("LT", "Luis Torres", "IPN"),
                     ).forEach { (initials, name, uni) ->
-                        RecentCandidateRow(initials = initials, name = name, role = uni, onMessage = { onOpenChat(name) })
+                        RecentCandidateRow(initials = initials, name = name, role = uni, onMessage = { onOpenChat(1L) })
                     }
                 }
             }

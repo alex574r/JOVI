@@ -278,7 +278,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                 exitTransition = { fadeOut(tween(300)) },
             ) {
                 MatchCelebrationScreen(
-                    onSendMessage = { navController.navigate(Screen.Chat.createRoute("Innovatech Corp")) },
+                    onSendMessage = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onKeepSearching = { navController.popBackStack() },
                     onDismiss = { navController.popBackStack() },
                 )
@@ -289,16 +289,16 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                 val conversations by chatViewModel.conversations.collectAsState()
                 ChatListScreen(
                     conversations = conversations,
-                    onOpenChat = { name -> navController.navigate(Screen.Chat.createRoute(name)) },
+                    onOpenChat = { convId -> navController.navigate(Screen.Chat.createRoute(convId)) },
                     onBack = { navController.popBackStack() },
                 )
             }
 
             // --- CHAT ---
             composable(Screen.Chat.route) { backStackEntry ->
-                val contactName = backStackEntry.arguments?.getString("contactName") ?: "Empresa"
+                val conversationId = backStackEntry.arguments?.getString("conversationId")?.toLongOrNull() ?: 1L
                 ChatScreen(
-                    contactName = contactName,
+                    contactName = conversationId.toString(),
                     onBack = { navController.popBackStack() },
                     onScheduleInterview = { navController.navigate(Screen.MyAppointments.route) },
                     onVideoCall = { navController.navigate(Screen.VideoInterview.route) },
@@ -326,7 +326,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
             composable(Screen.ApplicationTracker.route) {
                 ApplicationTrackerScreen(
                     onBack = { navController.popBackStack() },
-                    onMessageRecruiter = { navController.navigate(Screen.Chat.createRoute("TechCorp")) },
+                    onMessageRecruiter = { navController.navigate(Screen.Chat.createRoute(1L)) },
                 )
             }
             composable(Screen.MyApplications.route) {
@@ -354,7 +354,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                 PublicProfileScreen(
                     onBack = { navController.popBackStack() },
                     onShare = {},
-                    onSendMatchRequest = { navController.navigate(Screen.Chat.createRoute("Recruiter")) },
+                    onSendMatchRequest = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onAddExperience = { navController.navigate(Screen.AddWorkExperience.route) },
                     onEditProfile = { navController.navigate(Screen.EditProfile.route) },
                     onSettings = { navController.navigate(Screen.Settings.route) },
@@ -503,7 +503,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                         }
                     },
                     onSettings = { navController.navigate(Screen.Settings.route) },
-                    onOpenChat = { name -> navController.navigate(Screen.Chat.createRoute(name)) },
+                    onOpenChat = { convId -> navController.navigate(Screen.Chat.createRoute(convId)) },
                     onAnalytics = { navController.navigate(Screen.RecruiterAnalytics.route) },
                     onPublishVacancy = { navController.navigate(Screen.PublishVacancy.route) },
                     onViewApplicant = { navController.navigate(Screen.StudentProfileDetail.route) },
@@ -519,7 +519,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                     onNotifications = { navController.navigate(Screen.Notifications.route) },
                     onPublishVacancy = { navController.navigate(Screen.PublishVacancy.route) },
                     onReviewApplicants = { navController.navigate(Screen.ServiceApplicants.route) },
-                    onMessages = { navController.navigate(Screen.Chat.createRoute("Estudiante")) },
+                    onMessages = { navController.navigate(Screen.Chat.createRoute(1L)) },
                     onProfile = { navController.navigate(Screen.PublicProfile.route) },
                     onSettings = { navController.navigate(Screen.Settings.route) },
                 )
@@ -528,7 +528,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                 ServiceApplicantsScreen(
                     onBack = { navController.popBackStack() },
                     onViewProfile = { navController.navigate(Screen.StudentProfileDetail.route) },
-                    onChat = { navController.navigate(Screen.Chat.createRoute("Estudiante")) },
+                    onChat = { navController.navigate(Screen.Chat.createRoute(1L)) },
                 )
             }
             composable(Screen.PublishVacancy.route) {
