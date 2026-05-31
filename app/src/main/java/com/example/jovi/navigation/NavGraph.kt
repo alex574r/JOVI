@@ -379,8 +379,9 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
             }
             composable(Screen.EditProfile.route) {
                 EditProfileScreen(
+                    authViewModel = authViewModel,
                     onBack = { navController.popBackStack() },
-                    onSave = { navController.popBackStack() },
+                    onSave = { navController.popBackStack() }
                 )
             }
             composable(Screen.SavedPosts.route) {
@@ -460,7 +461,7 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
                 )
             }
             composable(Screen.ChangePassword.route) {
-                ChangePasswordScreen(onBack = { navController.popBackStack() })
+                ChangePasswordScreen(authViewModel = authViewModel, onBack = { navController.popBackStack() })
             }
             composable(Screen.NotificationPrefs.route) {
                 NotificationPrefsScreen(settingsViewModel = settingsViewModel, onBack = { navController.popBackStack() })
