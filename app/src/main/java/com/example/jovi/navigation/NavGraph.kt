@@ -66,7 +66,7 @@ fun JoviNavGraph(navController: NavHostController) {
 
     // --- ViewModels ---
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModel.Factory(app.userRepository)
+        factory = AuthViewModel.Factory(app.userRepository, prefs)
     )
     val feedViewModel: FeedViewModel = viewModel(
         factory = FeedViewModel.Factory(app.postRepository)
@@ -179,21 +179,20 @@ fun JoviNavGraph(navController: NavHostController) {
             // --- AUTH ---
             composable(Screen.Login.route) {
                 LoginScreen(
-                    onLogin = {
-                        authViewModel.loginAsDemo()
+                    authViewModel = authViewModel,
+                    onLoginSuccess = {
                         navController.navigate(Screen.JobDiscovery.route) {
+                            popUpTo(Screen.Login.route) { inclusive = true }
+                        }
+                    },
+                    onLoginAsRecruiter = {
+                        navController.navigate(Screen.RecruiterPortal.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
                     onRegister = { navController.navigate(Screen.RegisterPersonal.route) },
                     onGuest = {
                         navController.navigate(Screen.JobDiscovery.route) {
-                            popUpTo(Screen.Login.route) { inclusive = true }
-                        }
-                    },
-                    onRecruiterLogin = {
-                        authViewModel.loginAsDemo(com.example.jovi.data.db.entity.AccountType.RECRUITER)
-                        navController.navigate(Screen.RecruiterPortal.route) {
                             popUpTo(Screen.Login.route) { inclusive = true }
                         }
                     },
