@@ -286,9 +286,14 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
 
             // --- CHAT LIST ---
             composable(Screen.ChatList.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { chatViewModel.loadConversationsForUser(it) }
+                }
                 val conversations by chatViewModel.conversations.collectAsState()
                 ChatListScreen(
                     conversations = conversations,
+                    currentUserId = currentUser?.id ?: -1L,
                     onOpenChat = { convId -> navController.navigate(Screen.Chat.createRoute(convId)) },
                     onBack = { navController.popBackStack() },
                 )
@@ -296,9 +301,19 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
 
             // --- CHAT ---
             composable(Screen.Chat.route) { backStackEntry ->
-                val conversationId = backStackEntry.arguments?.getString("conversationId")?.toLongOrNull() ?: 1L
+                val conversationId = backStackEntry.arguments?.getString("conversationId")?.toLongOrNull() ?: return@composable
+                val conversations by chatViewModel.conversations.collectAsState()
+                val currentUser by authViewModel.currentUser.collectAsState()
+                val conv = conversations.find { it.id == conversationId }
+                val isUser1 = conv?.userId1 == currentUser?.id
+                val contactName = if (isUser1) conv?.user2Name ?: "" else conv?.user1Name ?: ""
+                val contactInitials = if (isUser1) conv?.user2Initials ?: "?" else conv?.user1Initials ?: "?"
                 ChatScreen(
-                    contactName = conversationId.toString(),
+                    conversationId = conversationId,
+                    contactName = contactName,
+                    contactInitials = contactInitials,
+                    chatViewModel = chatViewModel,
+                    authViewModel = authViewModel,
                     onBack = { navController.popBackStack() },
                     onScheduleInterview = { navController.navigate(Screen.MyAppointments.route) },
                     onVideoCall = { navController.navigate(Screen.VideoInterview.route) },

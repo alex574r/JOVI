@@ -17,43 +17,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.jovi.data.db.entity.MessageEntity
+import com.example.jovi.data.db.entity.MessageStatus
+import com.example.jovi.data.db.entity.MessageType
 import com.example.jovi.ui.components.*
 import com.example.jovi.ui.theme.*
-
-private sealed class ChatMessage {
-    data class Text(val id: Int, val text: String, val isMe: Boolean, val time: String, val read: Boolean = false) : ChatMessage()
-    data class ConfirmedInterview(val id: Int, val date: String, val time: String) : ChatMessage()
-    data class FileAttachment(val id: Int, val fileName: String, val size: String, val time: String, val isMe: Boolean) : ChatMessage()
-}
-
-private val sampleMessages = listOf(
-    ChatMessage.Text(1, "Hola Alex, revisamos tu portafolio y quedamos muy impresionados. ¡Confirmemos la entrevista para este jueves!", false, "10:24 AM"),
-    ChatMessage.ConfirmedInterview(2, "Oct 24, 2023", "10:00 AM"),
-    ChatMessage.Text(3, "¡Perfecto! Recibí la confirmación y el horario me viene genial. También adjunté mi CV más reciente.", true, "10:25 AM"),
-    ChatMessage.Text(4, "Hola Alex, revisamos tu portafolio y quedamos muy impresionados con tus casos de estudio. ¿Podemos agendar una llamada rápida?", false, "10:24 AM"),
-    ChatMessage.Text(5, "¡Hola! Muchas gracias por el feedback. Sí, definitivamente estoy disponible este jueves por la tarde.", true, "10:26 AM", true),
-    ChatMessage.Text(6, "Aquí está mi CV actualizado para tu referencia.", true, "10:27 AM", true),
-    ChatMessage.FileAttachment(7, "CV_Alex_Dev.pdf", "1.2 MB", "10:27 AM", true),
-)
+import com.example.jovi.viewmodel.AuthViewModel
+import com.example.jovi.viewmodel.ChatViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    contactName: String = "Global Tech",
+    conversationId: Long,
+    contactName: String,
+    contactInitials: String,
+    chatViewModel: ChatViewModel,
+    authViewModel: AuthViewModel,
     onBack: () -> Unit,
-    onScheduleInterview: () -> Unit,
-    onVideoCall: () -> Unit,
+    onScheduleInterview: () -> Unit = {},
+    onVideoCall: () -> Unit = {},
 ) {
+    val currentUser by authViewModel.currentUser.collectAsState()
+    val messages by chatViewModel.messages.collectAsState()
     var messageText by remember { mutableStateOf("") }
-    var showScheduleSheet by remember { mutableStateOf(false) }
+    var showDocDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+
+    LaunchedEffect(conversationId) {
+        chatViewModel.loadMessages(conversationId)
+        chatViewModel.markAsRead(conversationId)
+    }
+
+    LaunchedEffect(messages.size) {
+        if (messages.isNotEmpty()) listState.animateScrollToItem(messages.size - 1)
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ProfileAvatar(initials = contactName.take(2), size = 38.dp)
+                        ProfileAvatar(initials = contactInitials, size = 38.dp)
                         Column {
                             Text(contactName, style = MaterialTheme.typography.titleMedium)
                             Text("EN LÍNEA", style = MaterialTheme.typography.labelSmall, color = PrimaryDark)
@@ -79,14 +85,12 @@ fun ChatScreen(
         bottomBar = {
             Surface(shadowElevation = 4.dp, color = BackgroundColor) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Outlined.AttachFile, contentDescription = null, tint = TextSecondary)
+                    IconButton(onClick = { showDocDialog = true }) {
+                        Icon(Icons.Outlined.AttachFile, contentDescription = "Adjuntar", tint = TextSecondary)
                     }
                     OutlinedTextField(
                         value = messageText,
@@ -100,17 +104,17 @@ fun ChatScreen(
                         ),
                         singleLine = true,
                     )
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Outlined.EmojiEmotions, contentDescription = null, tint = TextSecondary)
-                    }
                     Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(PrimaryColor),
+                        modifier = Modifier.size(40.dp).clip(CircleShape).background(PrimaryColor),
                         contentAlignment = Alignment.Center
                     ) {
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = {
+                            val u = currentUser ?: return@IconButton
+                            if (messageText.isNotBlank()) {
+                                chatViewModel.sendMessage(conversationId, u.id, u.displayName, messageText)
+                                messageText = ""
+                            }
+                        }) {
                             Icon(Icons.Default.Send, contentDescription = "Enviar", tint = SecondaryColor, modifier = Modifier.size(18.dp))
                         }
                     }
@@ -121,10 +125,7 @@ fun ChatScreen(
     ) { padding ->
         LazyColumn(
             state = listState,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -135,120 +136,127 @@ fun ChatScreen(
                     }
                 }
             }
-            items(sampleMessages) { msg ->
-                when (msg) {
-                    is ChatMessage.Text -> ChatBubble(msg)
-                    is ChatMessage.ConfirmedInterview -> InterviewCard(msg, onJoin = onVideoCall)
-                    is ChatMessage.FileAttachment -> FileAttachmentBubble(msg)
+            items(messages, key = { it.id }) { msg ->
+                val isMe = msg.senderId == (currentUser?.id ?: -1L)
+                when (msg.type) {
+                    MessageType.FILE -> FileMessageBubble(msg, isMe, contactInitials, currentUser?.avatarInitials ?: "?")
+                    else -> TextMessageBubble(msg, isMe, contactInitials, currentUser?.avatarInitials ?: "?")
                 }
             }
         }
     }
 
-    if (showScheduleSheet) {
-        ScheduleInterviewBottomSheet(
-            onDismiss = { showScheduleSheet = false },
-            onConfirm = { showScheduleSheet = false; onScheduleInterview() }
+    if (showDocDialog) {
+        DocumentPickerDialog(
+            onDismiss = { showDocDialog = false },
+            onSend = { fileName, fileSize ->
+                val u = currentUser ?: return@DocumentPickerDialog
+                chatViewModel.sendDocument(conversationId, u.id, u.displayName, fileName, fileSize)
+                showDocDialog = false
+            }
         )
     }
 }
 
 @Composable
-private fun ChatBubble(msg: ChatMessage.Text) {
+private fun TextMessageBubble(msg: MessageEntity, isMe: Boolean, contactInitials: String, myInitials: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (msg.isMe) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (!msg.isMe) {
-            ProfileAvatar(initials = "GT", size = 28.dp, modifier = Modifier.padding(end = 6.dp))
-        }
+        if (!isMe) ProfileAvatar(initials = contactInitials, size = 28.dp, modifier = Modifier.padding(end = 6.dp))
         Column(
-            horizontalAlignment = if (msg.isMe) Alignment.End else Alignment.Start,
+            horizontalAlignment = if (isMe) Alignment.End else Alignment.Start,
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Surface(
                 shape = RoundedCornerShape(
                     topStart = 16.dp, topEnd = 16.dp,
-                    bottomStart = if (msg.isMe) 16.dp else 4.dp,
-                    bottomEnd = if (msg.isMe) 4.dp else 16.dp
+                    bottomStart = if (isMe) 16.dp else 4.dp,
+                    bottomEnd = if (isMe) 4.dp else 16.dp
                 ),
-                color = if (msg.isMe) PrimaryColor else SurfaceColor
+                color = if (isMe) PrimaryColor else SurfaceColor
             ) {
                 Text(
-                    msg.text,
+                    msg.content,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (msg.isMe) SecondaryColor else TextPrimary
+                    color = if (isMe) SecondaryColor else TextPrimary
                 )
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(msg.time, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-                if (msg.isMe && msg.read) {
-                    Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = PrimaryDark)
-                }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(formatMsgTime(msg.timestamp), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                if (isMe) StatusIcon(msg.status)
             }
         }
-        if (msg.isMe) {
-            ProfileAvatar(initials = "TU", size = 28.dp, modifier = Modifier.padding(start = 6.dp))
-        }
+        if (isMe) ProfileAvatar(initials = myInitials, size = 28.dp, modifier = Modifier.padding(start = 6.dp))
     }
 }
 
 @Composable
-private fun InterviewCard(msg: ChatMessage.ConfirmedInterview, onJoin: () -> Unit) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = BackgroundColor,
-        border = androidx.compose.foundation.BorderStroke(1.5.dp, PrimaryColor)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = PrimaryDark, modifier = Modifier.size(24.dp))
-            Text("ENTREVISTA CONFIRMADA", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = TextSecondary)
-            Text(msg.date, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = PrimaryDark)
-            Text(msg.time, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-            JoviPrimaryButton(text = "Unirse a la Reunión", onClick = onJoin)
-            TextButton(onClick = {}) {
-                Text("Añadir al Calendario", color = PrimaryDark)
-            }
-        }
-    }
-}
-
-@Composable
-private fun FileAttachmentBubble(msg: ChatMessage.FileAttachment) {
+private fun FileMessageBubble(msg: MessageEntity, isMe: Boolean, contactInitials: String, myInitials: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (msg.isMe) Arrangement.End else Arrangement.Start,
+        horizontalArrangement = if (isMe) Arrangement.End else Arrangement.Start,
         verticalAlignment = Alignment.Bottom
     ) {
-        if (!msg.isMe) ProfileAvatar(initials = "GT", size = 28.dp, modifier = Modifier.padding(end = 6.dp))
-        Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = if (msg.isMe) PrimaryColor else SurfaceColor
-        ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        if (!isMe) ProfileAvatar(initials = contactInitials, size = 28.dp, modifier = Modifier.padding(end = 6.dp))
+        Surface(shape = RoundedCornerShape(12.dp), color = if (isMe) PrimaryColor else SurfaceColor) {
+            Row(modifier = Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Surface(shape = RoundedCornerShape(8.dp), color = ErrorColor.copy(0.15f)) {
                     Icon(Icons.Outlined.PictureAsPdf, contentDescription = null, tint = ErrorColor, modifier = Modifier.padding(8.dp).size(20.dp))
                 }
                 Column {
-                    Text(msg.fileName, style = MaterialTheme.typography.labelMedium, color = if (msg.isMe) SecondaryColor else TextPrimary)
-                    Text(msg.size, style = MaterialTheme.typography.labelSmall, color = if (msg.isMe) SecondaryColor.copy(0.7f) else TextSecondary)
+                    Text(msg.fileName ?: msg.content, style = MaterialTheme.typography.labelMedium, color = if (isMe) SecondaryColor else TextPrimary)
+                    Text(msg.fileSize ?: "", style = MaterialTheme.typography.labelSmall, color = if (isMe) SecondaryColor.copy(0.7f) else TextSecondary)
                 }
-                Icon(Icons.Outlined.Download, contentDescription = null, tint = if (msg.isMe) SecondaryColor else TextSecondary)
+                Icon(Icons.Outlined.Download, contentDescription = null, tint = if (isMe) SecondaryColor else TextSecondary)
             }
         }
+        if (isMe) ProfileAvatar(initials = myInitials, size = 28.dp, modifier = Modifier.padding(start = 6.dp))
     }
 }
+
+@Composable
+private fun StatusIcon(status: MessageStatus) {
+    when (status) {
+        MessageStatus.SENT -> Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(12.dp), tint = TextSecondary)
+        MessageStatus.DELIVERED -> Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = TextSecondary)
+        MessageStatus.READ -> Icon(Icons.Default.DoneAll, contentDescription = null, modifier = Modifier.size(12.dp), tint = PrimaryDark)
+    }
+}
+
+@Composable
+private fun DocumentPickerDialog(onDismiss: () -> Unit, onSend: (String, String) -> Unit) {
+    val docs = listOf(
+        "CV_Actualizado.pdf" to "1.2 MB",
+        "Portafolio_2025.pdf" to "3.4 MB",
+        "Carta_Presentacion.docx" to "245 KB",
+        "Transcripcion_Oficial.pdf" to "890 KB"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Seleccionar documento") },
+        text = {
+            Column {
+                docs.forEach { (name, size) ->
+                    Surface(onClick = { onSend(name, size) }, color = BackgroundColor) {
+                        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Outlined.PictureAsPdf, contentDescription = null, tint = ErrorColor, modifier = Modifier.size(20.dp))
+                            Column {
+                                Text(name, style = MaterialTheme.typography.bodyMedium)
+                                Text(size, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            }
+                        }
+                    }
+                    HorizontalDivider(color = DividerColor)
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
+}
+
+private fun formatMsgTime(millis: Long): String =
+    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(millis))
