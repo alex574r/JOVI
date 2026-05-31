@@ -365,7 +365,12 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
 
             // --- PROFILE ---
             composable(Screen.PublicProfile.route) {
-                LaunchedEffect(Unit) { profileViewModel.loadUser(1L) }
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { profileViewModel.loadUser(it) }
+                }
+                val profileUser by profileViewModel.user.collectAsState()
+                val profilePosts by profileViewModel.posts.collectAsState()
                 PublicProfileScreen(
                     onBack = { navController.popBackStack() },
                     onShare = {},

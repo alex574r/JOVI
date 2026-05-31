@@ -9,6 +9,7 @@ class PostRepository(private val postDao: PostDao) {
     fun getThreads(): Flow<List<PostEntity>> = postDao.getThreads()
     fun getReels(): Flow<List<PostEntity>> = postDao.getReels()
     fun getPostsByUser(userId: Long): Flow<List<PostEntity>> = postDao.getPostsByUser(userId)
+    fun getPostsByAuthor(authorId: Long): Flow<List<PostEntity>> = postDao.getPostsByAuthor(authorId)
     fun getPostById(id: Long): Flow<PostEntity?> = postDao.getPostById(id)
     fun searchPosts(query: String): Flow<List<PostEntity>> = postDao.searchPosts(query)
     suspend fun insert(post: PostEntity): Long = postDao.insert(post)
