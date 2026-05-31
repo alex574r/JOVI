@@ -25,6 +25,12 @@ class NotificationViewModel(private val repo: NotificationRepository) : ViewMode
     fun markRead(id: Long) { viewModelScope.launch { repo.markRead(id) } }
     fun markAllRead() { viewModelScope.launch { repo.markAllRead() } }
 
+    fun loadForUser(userId: Long) {
+        viewModelScope.launch {
+            repo.getNotificationsForUser(userId).collect { _notifications.value = it }
+        }
+    }
+
     class Factory(private val repository: NotificationRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             @Suppress("UNCHECKED_CAST")

@@ -247,15 +247,19 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
 
             // --- DISCOVERY ---
             composable(Screen.JobDiscovery.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
                 JobDiscoveryScreen(
                     onMatch = { navController.navigate(Screen.MatchCelebration.route) },
                     onVacancyDetail = { navController.navigate(Screen.VacancyDetail.route) },
+                    currentUserName = currentUser?.displayName ?: "Tú",
                 )
             }
             composable(Screen.InternshipDiscovery.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
                 InternshipDiscoveryScreen(
                     onMatch = { navController.navigate(Screen.MatchCelebration.route) },
                     onVacancyDetail = { navController.navigate(Screen.VacancyDetail.route) },
+                    currentUserName = currentUser?.displayName ?: "Tú",
                 )
             }
             composable(Screen.CandidateDiscovery.route) {
@@ -443,6 +447,10 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
 
             // --- NOTIFICATIONS ---
             composable(Screen.Notifications.route) {
+                val currentUser by authViewModel.currentUser.collectAsState()
+                LaunchedEffect(currentUser?.id) {
+                    currentUser?.id?.let { notifViewModel.loadForUser(it) }
+                }
                 val notifications by notifViewModel.notifications.collectAsState()
                 NotificationsScreen(
                     notifications = notifications,
