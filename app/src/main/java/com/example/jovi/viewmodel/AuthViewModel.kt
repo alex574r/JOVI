@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.jovi.data.db.entity.AccountType
 import com.example.jovi.data.db.entity.UserEntity
 import com.example.jovi.data.repository.UserRepository
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,7 +51,12 @@ class AuthViewModel(
         if (password.isBlank()) { _authState.value = AuthState.Error("Ingresa tu contraseña"); return }
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val user = userRepository.loginWithPassword(email.trim(), password)
+            // Retry once to handle the case where DB seed is still running on first launch
+            var user = userRepository.loginWithPassword(email.trim(), password)
+            if (user == null && userRepository.getUserByEmail(email.trim()) == null) {
+                delay(1500)
+                user = userRepository.loginWithPassword(email.trim(), password)
+            }
             if (user != null) {
                 saveSession(user)
                 _currentUser.value = user
