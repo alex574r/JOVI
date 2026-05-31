@@ -11,95 +11,46 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.jovi.ui.components.JoviTopBar
 import com.example.jovi.ui.theme.*
+import com.example.jovi.viewmodel.SettingsViewModel
 
 @Composable
-fun NotificationPrefsScreen(onBack: () -> Unit) {
-    var pushEnabled by remember { mutableStateOf(true) }
-    var newMatch by remember { mutableStateOf(true) }
-    var newMessage by remember { mutableStateOf(true) }
-    var newLike by remember { mutableStateOf(false) }
-    var newComment by remember { mutableStateOf(true) }
-    var interviewReminder by remember { mutableStateOf(true) }
-    var weeklyReport by remember { mutableStateOf(false) }
-    var streakAlert by remember { mutableStateOf(true) }
-    var vacancyRecommendations by remember { mutableStateOf(true) }
-    var emailSummary by remember { mutableStateOf(false) }
+fun NotificationPrefsScreen(
+    settingsViewModel: SettingsViewModel,
+    onBack: () -> Unit,
+) {
+    val settings by settingsViewModel.settings.collectAsState()
 
     Scaffold(
+        topBar = { JoviTopBar(title = "Notificaciones", onBack = onBack) },
         containerColor = BackgroundColor,
-        topBar = { JoviTopBar(title = "Notificaciones", onBack = onBack) }
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()),
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            NotifSection(title = "General") {
-                NotifToggle("Notificaciones push", "Activar o desactivar todas las notificaciones", pushEnabled) { pushEnabled = it }
+            Text("Elige qué notificaciones recibir", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            Spacer(Modifier.height(8.dp))
+            NotifToggle("Matches", "Cuando una empresa hace match contigo", settings?.matchNotifications ?: true) {
+                settingsViewModel.toggleMatchNotifications()
             }
-
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider(thickness = 8.dp, color = SurfaceColor)
-            Spacer(Modifier.height(8.dp))
-
-            NotifSection(title = "Actividad social") {
-                NotifToggle("Nuevo match", "Cuando alguien hace match contigo", newMatch) { newMatch = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Nuevo mensaje", "Cuando recibes un mensaje", newMessage) { newMessage = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Likes en tus publicaciones", "Cuando alguien da like a tu contenido", newLike) { newLike = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Comentarios", "Cuando alguien comenta en tu publicacion", newComment) { newComment = it }
+            NotifToggle("Mensajes", "Nuevos mensajes en tus conversaciones", settings?.messageNotifications ?: true) {
+                settingsViewModel.toggleMessageNotifications()
             }
-
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider(thickness = 8.dp, color = SurfaceColor)
-            Spacer(Modifier.height(8.dp))
-
-            NotifSection(title = "Proceso de contratacion") {
-                NotifToggle("Recordatorio de entrevista", "Aviso 30 min antes de una entrevista", interviewReminder) { interviewReminder = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Alerta de racha", "Cuando llevas 3+ horas sin actividad", streakAlert) { streakAlert = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Vacantes recomendadas", "Nuevas vacantes que coinciden con tu perfil", vacancyRecommendations) { vacancyRecommendations = it }
+            NotifToggle("Todas las notificaciones", "Activar o desactivar todo", settings?.notificationsEnabled ?: true) {
+                settingsViewModel.toggleNotifications()
             }
-
-            Spacer(Modifier.height(8.dp))
-            HorizontalDivider(thickness = 8.dp, color = SurfaceColor)
-            Spacer(Modifier.height(8.dp))
-
-            NotifSection(title = "Correo electronico") {
-                NotifToggle("Resumen semanal", "Resumen de actividad cada lunes por correo", emailSummary) { emailSummary = it }
-                HorizontalDivider(color = DividerColor)
-                NotifToggle("Informe mensual", "Reporte de progreso mensual", weeklyReport) { weeklyReport = it }
-            }
-
-            Spacer(Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun NotifSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = TextSecondary, modifier = Modifier.padding(bottom = 6.dp))
-        content()
-    }
-}
-
-@Composable
-private fun NotifToggle(title: String, subtitle: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+private fun NotifToggle(title: String, subtitle: String, checked: Boolean, onToggle: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = BackgroundColor, checkedTrackColor = PrimaryDark),
-        )
+        Switch(checked = checked, onCheckedChange = { onToggle() }, colors = SwitchDefaults.colors(checkedThumbColor = BackgroundColor, checkedTrackColor = PrimaryDark))
     }
+    HorizontalDivider(color = DividerColor)
 }

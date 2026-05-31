@@ -446,24 +446,24 @@ fun JoviNavGraph(navController: NavHostController, settingsViewModel: SettingsVi
             // --- SETTINGS ---
             composable(Screen.Settings.route) {
                 SettingsScreen(
+                    authViewModel = authViewModel,
+                    settingsViewModel = settingsViewModel,
                     onBack = { navController.popBackStack() },
                     onLogout = {
-                        authViewModel.logout()
-                        navController.navigate(Screen.Login.route) {
-                            popUpTo(0) { inclusive = true }
-                        }
+                        navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } }
                     },
                     onChangePassword = { navController.navigate(Screen.ChangePassword.route) },
                     onNotificationPrefs = { navController.navigate(Screen.NotificationPrefs.route) },
                     onPrivacy = { navController.navigate(Screen.PrivacySettings.route) },
                     onHelp = { navController.navigate(Screen.Help.route) },
+                    onEditProfile = { navController.navigate(Screen.EditProfile.route) },
                 )
             }
             composable(Screen.ChangePassword.route) {
                 ChangePasswordScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.NotificationPrefs.route) {
-                NotificationPrefsScreen(onBack = { navController.popBackStack() })
+                NotificationPrefsScreen(settingsViewModel = settingsViewModel, onBack = { navController.popBackStack() })
             }
             composable(Screen.PrivacySettings.route) {
                 PrivacySettingsScreen(onBack = { navController.popBackStack() })
